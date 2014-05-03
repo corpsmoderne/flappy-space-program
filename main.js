@@ -351,7 +351,7 @@ $(document).ready(function() {
   var dt = 0;
   function run() {
     var now = Date.now();
-    dt = (now - oldT) / 1000;
+    dt += (now - oldT) / 1000;
     oldT = now;
 
     var DT = 0.02;
