@@ -213,7 +213,7 @@ $(document).ready(function() {
 
   var showHelp = true;
 
-  var FLAP = 8;
+  var FLAP = 0.16;
 
   // birds list(s) and creation / destruction
   var toRemove = [];
@@ -300,7 +300,7 @@ $(document).ready(function() {
     var d = dist(obj.x, obj.y);
 
     var f = G*M/(d*d);
-    obj.f = f*dt;
+    obj.f = f;
 
     var nX = obj.x/d;
     var nY = obj.y/d;
