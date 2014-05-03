@@ -295,11 +295,6 @@ $(document).ready(function() {
     return Math.sqrt((x1*x1)+(y1*y1));
   }
 
-  // dot product
-  function dot(x1, y1, x2, y2) {
-    return (x1*y2)+(x2*y1);
-  }
-
   // Physics
   function grav(obj, dt) {
     var d = dist(obj.x, obj.y);
