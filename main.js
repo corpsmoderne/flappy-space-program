@@ -213,7 +213,7 @@ $(document).ready(function() {
 
   var showHelp = true;
 
-  var FLAP = 8;
+  var FLAP = 0.16;
 
   // birds list(s) and creation / destruction
   var toRemove = [];
@@ -295,17 +295,12 @@ $(document).ready(function() {
     return Math.sqrt((x1*x1)+(y1*y1));
   }
 
-  // dot product
-  function dot(x1, y1, x2, y2) {
-    return (x1*y2)+(x2*y1);
-  }
-
   // Physics
   function grav(obj, dt) {
     var d = dist(obj.x, obj.y);
 
     var f = G*M/(d*d);
-    obj.f = f*dt;
+    obj.f = f;
 
     var nX = obj.x/d;
     var nY = obj.y/d;
@@ -356,7 +351,7 @@ $(document).ready(function() {
   var dt = 0;
   function run() {
     var now = Date.now();
-    dt = (now - oldT) / 1000;
+    dt += (now - oldT) / 1000;
     oldT = now;
 
     var DT = 0.02;
@@ -371,8 +366,7 @@ $(document).ready(function() {
           if (o == o2 || o.dead == true || o2.dead == true) {
             return;
           }
-          var d = Math.sqrt(Math.pow(o.x-o2.x, 2) +
-                            Math.pow(o.y-o2.y, 2));
+          var d = dist(o.x-o2.x, o.y-o2.y);
           if (d < 20) {
             killBird(o);
             killBird(o2)
