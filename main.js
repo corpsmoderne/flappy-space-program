@@ -366,8 +366,7 @@ $(document).ready(function() {
           if (o == o2 || o.dead == true || o2.dead == true) {
             return;
           }
-          var d = Math.sqrt(Math.pow(o.x-o2.x, 2) +
-                            Math.pow(o.y-o2.y, 2));
+          var d = dist(o.x-o2.x, o.y-o2.y);
           if (d < 20) {
             killBird(o);
             killBird(o2)
