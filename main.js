@@ -409,7 +409,7 @@ $(document).ready(function() {
           var d = dist(o.x-o2.x, o.y-o2.y);
           if (d < 20) {
             killBird(o);
-            killBird(o2)
+            killBird(o2);
           }
         });
         
