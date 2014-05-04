@@ -354,6 +354,8 @@ $(document).ready(function() {
       }
 
     } else { // colliding
+      obj.x = R*X/D;
+      obj.y = R*Y/D;
       obj.u = 0;
       obj.v = 0;
 
