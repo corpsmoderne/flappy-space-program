@@ -45,6 +45,7 @@ $(document).ready(function() {
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
   }
   resize();
   $(window).resize(resize);
