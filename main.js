@@ -59,7 +59,7 @@ $(document).ready(function() {
   var sheet = new Image();
   sheet.onload = function() {
     bg.onload = function() {
-      run();
+      requestAnimationFrame(run);
     }
     bg.src = "bg.png";
   }
@@ -368,9 +368,9 @@ $(document).ready(function() {
     }
   }
 
-  var oldT = Date.now();
+  var oldT = 0;
   var dt = 0;
-  function run() {
+  function run(now) {
     //while(bird.boost > 0) {      
     if (bird.boost === true) {
       var d = Math.sqrt((bird.u*bird.u)+(bird.v*bird.v));
@@ -391,7 +391,8 @@ $(document).ready(function() {
       }
     }
     
-    var now = Date.now();
+    if(oldT === 0)
+        oldT = now;
     dt += (now - oldT) / 1000;
     oldT = now;
 
