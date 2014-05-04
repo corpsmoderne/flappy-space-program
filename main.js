@@ -185,20 +185,20 @@ $(document).ready(function() {
     ctx.restore();
   }
 
-  function drawBird(obj, dt) {
+  function drawBird(obj, t, alpha) {
     ctx.save();
-    ctx.translate(obj.x, obj.y);
-    ctx.rotate(obj.a);
+    ctx.translate(alpha*obj.x + (1-alpha)*obj.xPrev, alpha*obj.y + (1-alpha)*obj.yPrev);
+    ctx.rotate(interpolateAngle(obj.aPrev, obj.a, alpha));
     ctx.translate(-20, -20);
 
     if (obj.dead == true) {
       ctx.drawImage(sheet, 171, 119, 20, 20, 0, 0, 40, 40);
     } else {
-      if (dt % 0.8 < 0.2) {
+      if (t % 0.8 < 0.2) {
         ctx.drawImage(sheet, 262, 60, 20, 20, 0, 0, 40, 40);
-      } else if (dt % 0.8 < 0.4) {
+      } else if (t % 0.8 < 0.4) {
         ctx.drawImage(sheet, 262, 86, 20, 20, 0, 0, 40, 40);
-      } else if (dt % 0.8 < 0.6) {
+      } else if (t % 0.8 < 0.6) {
         ctx.drawImage(sheet, 221, 120, 20, 20, 0, 0, 40, 40);
       } else {
         ctx.drawImage(sheet, 262, 86, 20, 20, 0, 0, 40, 40);
@@ -231,6 +231,10 @@ $(document).ready(function() {
       boost: 0,
       dead: false
     };
+    bird.xPrev = bird.x;
+    bird.yPrev = bird.y;
+    bird.aPrev = bird.a;
+    
     objList.push(bird);
     return bird;
   }
@@ -290,6 +294,16 @@ $(document).ready(function() {
     });
   }
 
+  function interpolateAngle(a1, a2, alpha) {
+      var da = (a2 - a1)%(2*Math.PI);
+    if(da > Math.PI)
+        da = da-2*Math.PI;
+    else if(da < -Math.PI)
+        da = da+2*Math.PI;
+        
+    return a1 + alpha*da;
+  }
+  
   // distance from 0,0
   function dist(x1, y1) {
     return Math.sqrt((x1*x1)+(y1*y1));
@@ -297,6 +311,10 @@ $(document).ready(function() {
 
   // Physics
   function grav(obj, dt) {
+    obj.xPrev = obj.x;
+    obj.yPrev = obj.y;
+    obj.aPrev = obj.a;
+    
     var d = dist(obj.x, obj.y);
 
     var f = G*M/(d*d);
@@ -424,14 +442,14 @@ $(document).ready(function() {
     // draw particles
     parts.forEach(function(p) {
       ctx.save();
-      ctx.translate(p.x, p.y);
+      ctx.translate(p.x + p.u*dt, p.y + p.v*dt);
       p.render();
       ctx.restore();
     });
 
     // draw birds
     objList.forEach(function(o) {
-      drawBird(o, now/1000);
+      drawBird(o, now/1000, dt/DT+1);
     });
 
     // draw altitude limit
