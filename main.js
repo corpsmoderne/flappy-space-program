@@ -370,6 +370,26 @@ $(document).ready(function() {
   var oldT = Date.now();
   var dt = 0;
   function run() {
+    //while(bird.boost > 0) {      
+    if (bird.boost === true) {
+      var d = Math.sqrt((bird.u*bird.u)+(bird.v*bird.v));
+      bird.u += Math.cos(bird.a) * bird.f * FLAP;// * dt;
+      bird.v += Math.sin(bird.a) * bird.f * FLAP;// * dt;
+      bird.t = 0;
+      bird.boost = false;
+
+      for(var i=0; i < 10; i++) {
+        var a = bird.a + ((0.5-Math.random())*0.25);
+        var U = bird.u - (Math.cos(a) * 100 * (Math.random()+1));
+        var V = bird.v - (Math.sin(a) * 100 * (Math.random()+1));
+        
+        addPart(bird.x, bird.y, 
+                U,V,
+                0.5+Math.random(), 
+                (Math.random() < 0.5 ? drawDot : drawBigDot));
+      }
+    }
+    
     var now = Date.now();
     dt += (now - oldT) / 1000;
     oldT = now;
@@ -410,26 +430,6 @@ $(document).ready(function() {
 
     if (bird.t > 5.0) { // spawn new bird if last boost > 5 seconds
       bird = newBird();
-    }
-    //while(bird.boost > 0) {      
-    if (bird.boost === true) {
-      var d = Math.sqrt((bird.u*bird.u)+(bird.v*bird.v));
-      bird.u += Math.cos(bird.a) * bird.f * FLAP;// * dt;
-      bird.v += Math.sin(bird.a) * bird.f * FLAP;// * dt;
-      bird.t = 0;
-      bird.boost = false;
-
-      for(var i=0; i < 10; i++) {
-        var a = bird.a + ((0.5-Math.random())*0.25);
-        var U = bird.u - (Math.cos(a) * 100 * (Math.random()+1));
-        var V = bird.v - (Math.sin(a) * 100 * (Math.random()+1));
-        
-        addPart(bird.x, bird.y, 
-                U,V,
-                0.5+Math.random(), 
-                (Math.random() < 0.5 ? drawDot : drawBigDot));
-      }
-      
     }
 
     // draw blue background and planet
