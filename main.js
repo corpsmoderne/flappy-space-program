@@ -45,6 +45,7 @@ $(document).ready(function() {
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
   }
   resize();
   $(window).resize(resize);
@@ -58,7 +59,7 @@ $(document).ready(function() {
   var sheet = new Image();
   sheet.onload = function() {
     bg.onload = function() {
-      run();
+      requestAnimationFrame(run);
     }
     bg.src = "bg.png";
   }
@@ -185,20 +186,20 @@ $(document).ready(function() {
     ctx.restore();
   }
 
-  function drawBird(obj, dt) {
+  function drawBird(obj, t, alpha) {
     ctx.save();
-    ctx.translate(obj.x, obj.y);
-    ctx.rotate(obj.a);
+    ctx.translate(alpha*obj.x + (1-alpha)*obj.xPrev, alpha*obj.y + (1-alpha)*obj.yPrev);
+    ctx.rotate(interpolateAngle(obj.aPrev, obj.a, alpha));
     ctx.translate(-20, -20);
 
     if (obj.dead == true) {
       ctx.drawImage(sheet, 171, 119, 20, 20, 0, 0, 40, 40);
     } else {
-      if (dt % 0.8 < 0.2) {
+      if (t % 0.8 < 0.2) {
         ctx.drawImage(sheet, 262, 60, 20, 20, 0, 0, 40, 40);
-      } else if (dt % 0.8 < 0.4) {
+      } else if (t % 0.8 < 0.4) {
         ctx.drawImage(sheet, 262, 86, 20, 20, 0, 0, 40, 40);
-      } else if (dt % 0.8 < 0.6) {
+      } else if (t % 0.8 < 0.6) {
         ctx.drawImage(sheet, 221, 120, 20, 20, 0, 0, 40, 40);
       } else {
         ctx.drawImage(sheet, 262, 86, 20, 20, 0, 0, 40, 40);
@@ -213,7 +214,7 @@ $(document).ready(function() {
 
   var showHelp = true;
 
-  var FLAP = 8;
+  var FLAP = 0.16;
 
   // birds list(s) and creation / destruction
   var toRemove = [];
@@ -231,6 +232,10 @@ $(document).ready(function() {
       boost: 0,
       dead: false
     };
+    bird.xPrev = bird.x;
+    bird.yPrev = bird.y;
+    bird.aPrev = bird.a;
+    
     objList.push(bird);
     return bird;
   }
@@ -290,22 +295,31 @@ $(document).ready(function() {
     });
   }
 
+  function interpolateAngle(a1, a2, alpha) {
+      var da = (a2 - a1)%(2*Math.PI);
+    if(da > Math.PI)
+        da = da-2*Math.PI;
+    else if(da < -Math.PI)
+        da = da+2*Math.PI;
+        
+    return a1 + alpha*da;
+  }
+  
   // distance from 0,0
   function dist(x1, y1) {
     return Math.sqrt((x1*x1)+(y1*y1));
   }
 
-  // dot product
-  function dot(x1, y1, x2, y2) {
-    return (x1*y2)+(x2*y1);
-  }
-
   // Physics
   function grav(obj, dt) {
+    obj.xPrev = obj.x;
+    obj.yPrev = obj.y;
+    obj.aPrev = obj.a;
+    
     var d = dist(obj.x, obj.y);
 
     var f = G*M/(d*d);
-    obj.f = f*dt;
+    obj.f = f;
 
     var nX = obj.x/d;
     var nY = obj.y/d;
@@ -341,6 +355,8 @@ $(document).ready(function() {
       }
 
     } else { // colliding
+      obj.x = R*X/D;
+      obj.y = R*Y/D;
       obj.u = 0;
       obj.v = 0;
 
@@ -352,11 +368,32 @@ $(document).ready(function() {
     }
   }
 
-  var oldT = Date.now();
+  var oldT = 0;
   var dt = 0;
-  function run() {
-    var now = Date.now();
-    dt = (now - oldT) / 1000;
+  function run(now) {
+    //while(bird.boost > 0) {      
+    if (bird.boost === true) {
+      var d = Math.sqrt((bird.u*bird.u)+(bird.v*bird.v));
+      bird.u += Math.cos(bird.a) * bird.f * FLAP;// * dt;
+      bird.v += Math.sin(bird.a) * bird.f * FLAP;// * dt;
+      bird.t = 0;
+      bird.boost = false;
+
+      for(var i=0; i < 10; i++) {
+        var a = bird.a + ((0.5-Math.random())*0.25);
+        var U = bird.u - (Math.cos(a) * 100 * (Math.random()+1));
+        var V = bird.v - (Math.sin(a) * 100 * (Math.random()+1));
+        
+        addPart(bird.x, bird.y, 
+                U,V,
+                0.5+Math.random(), 
+                (Math.random() < 0.5 ? drawDot : drawBigDot));
+      }
+    }
+    
+    if(oldT === 0)
+        oldT = now;
+    dt += (now - oldT) / 1000;
     oldT = now;
 
     var DT = 0.02;
@@ -371,11 +408,10 @@ $(document).ready(function() {
           if (o == o2 || o.dead == true || o2.dead == true) {
             return;
           }
-          var d = Math.sqrt(Math.pow(o.x-o2.x, 2) +
-                            Math.pow(o.y-o2.y, 2));
+          var d = dist(o.x-o2.x, o.y-o2.y);
           if (d < 20) {
             killBird(o);
-            killBird(o2)
+            killBird(o2);
           }
         });
         
@@ -397,26 +433,6 @@ $(document).ready(function() {
     if (bird.t > 5.0) { // spawn new bird if last boost > 5 seconds
       bird = newBird();
     }
-    //while(bird.boost > 0) {      
-    if (bird.boost === true) {
-      var d = Math.sqrt((bird.u*bird.u)+(bird.v*bird.v));
-      bird.u += Math.cos(bird.a) * bird.f * FLAP;// * dt;
-      bird.v += Math.sin(bird.a) * bird.f * FLAP;// * dt;
-      bird.t = 0;
-      bird.boost = false;
-
-      for(var i=0; i < 10; i++) {
-        var a = bird.a + ((0.5-Math.random())*0.25);
-        var U = bird.u - (Math.cos(a) * 100 * (Math.random()+1));
-        var V = bird.v - (Math.sin(a) * 100 * (Math.random()+1));
-        
-        addPart(bird.x, bird.y, 
-                U,V,
-                0.5+Math.random(), 
-                (Math.random() < 0.5 ? drawDot : drawBigDot));
-      }
-      
-    }
 
     // draw blue background and planet
     ctx.fillStyle = "rgba(76, 134, 140, 1)"; //"#70c5ce";
@@ -430,14 +446,14 @@ $(document).ready(function() {
     // draw particles
     parts.forEach(function(p) {
       ctx.save();
-      ctx.translate(p.x, p.y);
+      ctx.translate(p.x + p.u*dt, p.y + p.v*dt);
       p.render();
       ctx.restore();
     });
 
     // draw birds
     objList.forEach(function(o) {
-      drawBird(o, now/1000);
+      drawBird(o, now/1000, dt/DT+1);
     });
 
     // draw altitude limit
